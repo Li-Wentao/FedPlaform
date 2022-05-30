@@ -4,14 +4,81 @@ const roomName = document.getElementById('room-name');
 const userList = document.getElementById('users');
 let dropArea = document.getElementById('drop-area');
 
-function handleFiles(files) {
-  ([...files]).forEach(uploadFile)
+
+// Load Dropped data
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+  dropArea.addEventListener(eventName, preventDefaults, false)
+})
+
+function preventDefaults(e) {
+  e.preventDefault()
+  e.stopPropagation()
 }
 
-function uploadFile(file) {
-  let formData = new FormData()
+['dragenter', 'dragover'].forEach(eventName => {
+  dropArea.addEventListener(eventName, highlight, false)
+});
 
-  formData.append('file', file)
+['dragleave', 'drop'].forEach(eventName => {
+  dropArea.addEventListener(eventName, unhighlight, false)
+});
+
+function highlight(e) {
+  dropArea.classList.add('highlight')
+}
+
+function unhighlight(e) {
+  dropArea.classList.remove('highlight')
+}
+
+dropArea.addEventListener('drop', handleDrop, false)
+
+function handleDrop(e) {
+  let dt = e.dataTransfer
+  let files = dt.files
+
+  handleFiles(files)
+}
+
+function handleFiles(files) {
+  files = [...files]
+  files.forEach(ExtractData)
+  files.forEach(previewFile)
+}
+
+function previewFile(file) {
+  let reader = new FileReader()
+  reader.readAsDataURL(file)
+  reader.onloadend = function () {
+    // Add notification that data was loaded
+    let node = document.createElement("h");
+    let textnode = document.createTextNode("Data imported!");
+    node.appendChild(textnode)
+    document.getElementById('Imported').appendChild(node)
+    // Start training botton
+    let btn = document.createElement("startButton");
+    btn.innerHTML = '<input type="button" id="start-btn" class="button button1" value="Start Training">';
+    document.getElementById('start').appendChild(btn)
+    
+    // The start training button
+    document.getElementById('start-btn').addEventListener('click', () => {
+      const start = confirm('Are you sure you want to start federated project?');
+      if (start) {
+        console.log('Started', start);
+      } else {
+      }
+    });
+
+  }
+}
+
+function ExtractData(file) {
+  let reader = new FileReader();
+  // reader.onload = (e) => {
+  //   $("#output").html(reader.result);
+  // }
+  reader.readAsText(file)
+  console.log(reader)
 }
 
 
@@ -100,3 +167,4 @@ document.getElementById('leave-btn').addEventListener('click', () => {
   } else {
   }
 });
+

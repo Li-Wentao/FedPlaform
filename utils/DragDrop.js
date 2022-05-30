@@ -1,5 +1,7 @@
 let dropArea = document.getElementById('drop-area');
 
+
+// Load Dropped data
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
     dropArea.addEventListener(eventName, preventDefaults, false)
 })
@@ -35,25 +37,14 @@ function handleDrop(e) {
 }
 
 function handleFiles(files) {
-    ([...files]).forEach(uploadFile)
+    ([...files]).forEach(ExtractData)
 }
 
-function uploadFile(file) {
-    var url = 'YOUR URL HERE'
-    var xhr = new XMLHttpRequest()
-    var formData = new FormData()
-    xhr.open('POST', url, true)
-
-    xhr.addEventListener('readystatechange', function (e) {
-        if (xhr.readyState == 4 && xhr.status == 200) {
-            // Done. Inform the user
-        }
-        else if (xhr.readyState == 4 && xhr.status != 200) {
-            // Error. Inform the user
-        }
-    })
-
-    formData.append('file', file)
-    xhr.send(formData)
+function ExtractData(file) {
+    let reader = new FileReader();
+    // reader.onload = (e) => {
+    //   $("#output").html(reader.result);
+    // }
+    reader.readAsText(file)
+    console.log(reader.result)
 }
-
