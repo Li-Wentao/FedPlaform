@@ -9,6 +9,12 @@ const {
   userLeave,
   getRoomUsers
 } = require('./utils/users');
+const pythonBridge = require('python-bridge');
+const python = pythonBridge();
+
+let list = [3, 4, 2, 1];
+python`sorted(${list})`.then(x => console.log(x));
+
 
 const app = express();
 const server = http.createServer(app);
@@ -18,6 +24,13 @@ const io = socketio(server);
 app.use(express.static(path.join(__dirname, 'public')));
 
 const botName = 'FedPlatform Bot';
+let GetReady = [];
+let StartRunning = false;
+
+// Get unique elements in array
+function onlyUnique(value, index, self) {
+  return self.indexOf(value) === index;
+};
 
 // Run when client connects
 io.on('connection', socket => {
@@ -50,6 +63,24 @@ io.on('connection', socket => {
     const user = getCurrentUser(socket.id);
 
     io.to(user.room).emit('message', formatMessage(user.username, msg));
+  });
+
+  // Runs when all clients hit Start Training button
+  socket.on('status', msg => {
+    const user = getCurrentUser(socket.id);
+    GetReady.push(user.id);
+    GetReady = GetReady.filter(onlyUnique);
+
+    console.log(`Client ${user.username} agreed to start!`);
+    console.log(`${GetReady.length} out of ${getRoomUsers(user.room).length} clients are ready to start.`);
+    io.to(user.room).emit('message', formatMessage(user.username, 'Ready to start'));
+    
+    // Notify all clients that the FL is starting
+    if (GetReady.length == getRoomUsers(user.room).length) {
+      StartRunning = true;
+      io.to(user.room).emit('message', formatMessage(botName, `All users agreed to start, and the federated learning project \[${user.room}\] starts initiating.`));
+      io.to(user.room).emit('start');
+    }
   });
 
   // Runs when client disconnects

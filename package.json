@@ -1,5 +1,5 @@
 {
-  "name": "chatcord",
+  "name": "FedPlatform",
   "version": "1.0.0",
   "description": "Realtime chat app with rooms",
   "main": "server.js",
@@ -7,11 +7,12 @@
     "start": "node server",
     "dev": "nodemon server"
   },
-  "author": "Brad Traversy",
+  "author": "Wentao Li",
   "license": "MIT",
   "dependencies": {
     "express": "^4.17.1",
     "moment": "^2.24.0",
+    "python-bridge": "^1.1.0",
     "socket.io": "^4.5.1"
   },
   "devDependencies": {

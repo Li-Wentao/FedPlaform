@@ -3,6 +3,14 @@ const chatMessages = document.querySelector('.chat-messages');
 const roomName = document.getElementById('room-name');
 const userList = document.getElementById('users');
 let dropArea = document.getElementById('drop-area');
+const pythonBridge = require('python-bridge');
+const python = pythonBridge();
+
+let data;
+let start = false;
+
+let list = [3, 4, 2, 1];
+python`sorted(${list})`.then(x => console.log(x));
 
 
 // Load Dropped data
@@ -42,8 +50,9 @@ function handleDrop(e) {
 
 function handleFiles(files) {
   files = [...files]
-  files.forEach(ExtractData)
+  
   files.forEach(previewFile)
+  files.forEach(ExtractData)
 }
 
 function previewFile(file) {
@@ -55,32 +64,25 @@ function previewFile(file) {
     let textnode = document.createTextNode("Data imported!");
     node.appendChild(textnode)
     document.getElementById('Imported').appendChild(node)
-    // Start training botton
-    let btn = document.createElement("startButton");
-    btn.innerHTML = '<input type="button" id="start-btn" class="button button1" value="Start Training">';
-    document.getElementById('start').appendChild(btn)
-    
-    // The start training button
-    document.getElementById('start-btn').addEventListener('click', () => {
-      const start = confirm('Are you sure you want to start federated project?');
-      if (start) {
-        console.log('Started', start);
-      } else {
-      }
-    });
 
   }
-}
+};
 
 function ExtractData(file) {
-  let reader = new FileReader();
-  // reader.onload = (e) => {
-  //   $("#output").html(reader.result);
-  // }
-  reader.readAsText(file)
-  console.log(reader)
-}
-
+  let extractor = new FileReader();
+ 
+  extractor.onload = function (event) {
+    data = event.target.result;
+    console.log('Got the data!');
+  };
+  extractor.onerror = function (event) {
+    console.error("File could not be read! Code " + event.target.error.code);
+  };
+  extractor.readAsBinaryString(file);
+  // data = extractor;
+  // console.log(`We got the data: ${data.result}`);
+};
+// console.log(`We got the data: ${data}`)
 
 // Get username and room from URL
 const { username, room } = Qs.parse(location.search, {
@@ -92,6 +94,27 @@ const socket = io();
 // Join chatroom
 socket.emit('joinRoom', { username, room });
 
+// Start training botton
+let btn = document.createElement("startButton");
+btn.innerHTML = '<input type="button" id="start-btn" class="button button1" value="Start Training">';
+document.getElementById('start').appendChild(btn)
+
+// The start training button
+let start_btn = document.getElementById('start-btn');
+start_btn.addEventListener('click', () => {
+  const result = confirm('Are you sure you want to start federated project?');
+  if (result) {
+    let start = true
+    console.log('Agree to start', start);
+    socket.emit('status', start);
+  } else {
+    let start = false
+    console.log('Refuse to start', start);
+  }
+});
+
+
+
 // Get room and users
 socket.on('roomUsers', ({ room, users }) => {
   outputRoomName(room);
@@ -102,6 +125,19 @@ socket.on('roomUsers', ({ room, users }) => {
 socket.on('message', (message) => {
   console.log(message);
   outputMessage(message);
+
+// Listen to the starting status
+socket.on('start', () => {
+  console.log('Begin initializting data in local...');
+  console.log('Data loaded as', data);
+  // // Save the data into a file locally
+  // var hiddenElement = document.createElement('a');
+
+  // hiddenElement.href = 'data:attachment/text,' + encodeURI(data);
+  // hiddenElement.target = '_blank';
+  // hiddenElement.download = 'data.csv';
+  // hiddenElement.click();
+});
 
   // Scroll down
   chatMessages.scrollTop = chatMessages.scrollHeight;
