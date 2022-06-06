@@ -9,3 +9,5 @@ node install
 `
 node run server
 `
+- Access Federated Learning Platform thru local host
+http://localhost:8080/
