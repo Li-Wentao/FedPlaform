@@ -2,7 +2,6 @@
 A Federated Learning Platform embedded with multiple models
 
 - Install dependence
-- 
 `
 node install
 `
