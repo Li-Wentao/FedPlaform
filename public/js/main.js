@@ -4,7 +4,8 @@ const roomName = document.getElementById('room-name');
 const userList = document.getElementById('users');
 let dropArea = document.getElementById('drop-area');
 // const pythonBridge = require('python-bridge');
-// const python = pythonBridge();
+let python = pythonBridge;
+// import { Express } from "express";
 
 let data;
 // let start = false;

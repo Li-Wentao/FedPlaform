@@ -9,11 +9,11 @@ const {
   userLeave,
   getRoomUsers
 } = require('./utils/users');
-// const pythonBridge = require('python-bridge');
-// const python = pythonBridge();
+const pythonBridge = require('python-bridge');
+const python = pythonBridge();
 
-// let list = [3, 4, 2, 1];
-// python`sorted(${list})`.then(x => console.log(x));
+let list = [3, 4, 2, 1];
+python`sorted(${list})`.then(x => console.log(x));
 
 
 const app = express();
@@ -22,6 +22,8 @@ const io = socketio(server);
 
 // Set static folder
 app.use(express.static(path.join(__dirname, 'public')));
+// app.use(express.static(path.join(__dirname, 'utils')));
+// app.use(express.static('utils'));
 
 const botName = 'FedPlatform Bot';
 let GetReady = [];
