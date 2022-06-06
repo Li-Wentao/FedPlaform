@@ -9,11 +9,11 @@ const {
   userLeave,
   getRoomUsers
 } = require('./utils/users');
-const pythonBridge = require('python-bridge');
-const python = pythonBridge();
+// const pythonBridge = require('python-bridge');
+// const python = pythonBridge();
 
-let list = [3, 4, 2, 1];
-python`sorted(${list})`.then(x => console.log(x));
+// let list = [3, 4, 2, 1];
+// python`sorted(${list})`.then(x => console.log(x));
 
 
 const app = express();
@@ -68,7 +68,7 @@ io.on('connection', socket => {
   // Runs when all clients hit Start Training button
   socket.on('status', msg => {
     const user = getCurrentUser(socket.id);
-    GetReady.push(user.id);
+    GetReady.push(user.username);
     GetReady = GetReady.filter(onlyUnique);
 
     console.log(`Client ${user.username} agreed to start!`);

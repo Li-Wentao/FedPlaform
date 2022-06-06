@@ -3,14 +3,14 @@ const chatMessages = document.querySelector('.chat-messages');
 const roomName = document.getElementById('room-name');
 const userList = document.getElementById('users');
 let dropArea = document.getElementById('drop-area');
-const pythonBridge = require('python-bridge');
-const python = pythonBridge();
+// const pythonBridge = require('python-bridge');
+// const python = pythonBridge();
 
 let data;
-let start = false;
+// let start = false;
 
-let list = [3, 4, 2, 1];
-python`sorted(${list})`.then(x => console.log(x));
+// let list = [3, 4, 2, 1];
+// python`sorted(${list})`.then(x => console.log(x));
 
 
 // Load Dropped data
@@ -79,8 +79,6 @@ function ExtractData(file) {
     console.error("File could not be read! Code " + event.target.error.code);
   };
   extractor.readAsBinaryString(file);
-  // data = extractor;
-  // console.log(`We got the data: ${data.result}`);
 };
 // console.log(`We got the data: ${data}`)
 
