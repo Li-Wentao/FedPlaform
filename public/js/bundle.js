@@ -1,60 +1,28 @@
+(function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
 const chatForm = document.getElementById('chat-form');
 const chatMessages = document.querySelector('.chat-messages');
 const roomName = document.getElementById('room-name');
 const userList = document.getElementById('users');
 let dropArea = document.getElementById('drop-area');
+// const pythonBridge = require('python-bridge');
+// let python = pythonBridge;
+
+// let list = [3, 4, 2, 1];
+// python`sorted(${list})`.then(x => console.log(x));
+
+async function main(){
+  let pyodide = await loadPyodide();
+  console.log(pyodide.runPython(`
+      import sys
+      sys.version
+  `));
+  console.log(pyodide.runPython("print(1 + 2)"));
+}
+
 let data;
-let r_data;
-let start;
-let var_names;
-let out;
-let test = JSON.stringify([[1,3,5,7], [2,4,6,8]]);
-let initPyodide = loadPyodide()
+// let start = false;
 
-// Define a sleep time function to avoid traffic jam
-function delay(n){
-  return new Promise(function(resolve){
-      setTimeout(resolve,n*1000);
-  });
-}
 
-// // Load csv file to array
-// const csv2json = (str, delimiter = ',') => {
-//   const titles = str.slice(0, str.indexOf('\n')).split(delimiter);
-//   const rows = str.slice(str.indexOf('\n') + 1).split('\n');
-//   return rows.map(row => {
-//     const values = row.split(delimiter);
-//     return titles.reduce((object, curr, i) => (object[curr] = values[i], object), {})
-//   });
-// };
-
-//var csv is the CSV file with headers
-function csvJSON(csv){
-  var lines=csv.split("\n");
-  var result = [];
-
-  // NOTE: If your columns contain commas in their values, you'll need
-  // to deal with those before doing the next step 
-  // (you might convert them to &&& or something, then covert them back later)
-  // jsfiddle showing the issue https://jsfiddle.net/
-  var headers=lines[0].split(",");
-
-  for(var i=1;i<lines.length;i++){
-
-      var obj = {};
-      var currentline=lines[i].split(",");
-
-      for(var j=0;j<headers.length;j++){
-          obj[headers[j]] = currentline[j];
-      }
-
-      result.push(obj);
-
-  }
-
-  //return result; //JavaScript object
-  return JSON.stringify(result); //JSON
-}
 
 // Load Dropped data
 ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
@@ -107,6 +75,7 @@ function previewFile(file) {
     let textnode = document.createTextNode("Data imported!");
     node.appendChild(textnode)
     document.getElementById('Imported').appendChild(node)
+
   }
 };
 
@@ -116,9 +85,6 @@ function ExtractData(file) {
   extractor.onload = function (event) {
     data = event.target.result;
     console.log('Got the data!');
-    // data = csv2json(data);
-    // data = JSON.stringify(data);
-    data = csvJSON(data)
   };
   extractor.onerror = function (event) {
     console.error("File could not be read! Code " + event.target.error.code);
@@ -147,10 +113,12 @@ let start_btn = document.getElementById('start-btn');
 start_btn.addEventListener('click', () => {
   const result = confirm('Are you sure you want to start federated project?');
   if (result) {
-    console.log('Agree to start');
-    socket.emit('status');
+    let start = true
+    console.log('Agree to start', start);
+    socket.emit('status', start);
   } else {
-    console.log('Refuse to start');
+    let start = false
+    console.log('Refuse to start', start);
   }
 });
 
@@ -168,67 +136,17 @@ socket.on('message', (message) => {
   outputMessage(message);
 
 // Listen to the starting status
-socket.off('start').on('start', msg => {
-  if (msg) {
-    console.log('Begin initializting data in local...');
-    console.log('msg:', msg);
-    start = true;
-    async function PythonScript(){
-      let pyodide = await initPyodide;
-      await pyodide.loadPackage(["pandas"]);
-      // Load and pass variable to python
-      pyodide.runPython(`data=${data}`);
-      // Run initialization python script
-      pyodide.runPython(
-        await (await fetch("py/initiate.py")).text()
-      );
-      var_names = pyodide.globals.get('var_names').toJs();
-      r_data = pyodide.globals.get('df');
-      let null_idx = pyodide.globals.get('null_idx');
-      if (null_idx.length){
-        socket.emit('chatMessage', `Detected ${null_idx.length} entries contain null, now removing...`)
-      };
-      socket.emit('variableNames', var_names);
-    }
-    PythonScript();
-  } 
+socket.on('start', () => {
+  console.log('Begin initializting data in local...');
+  console.log('Data loaded as', data);
+  // // Save the data into a file locally
+  // var hiddenElement = document.createElement('a');
+
+  // hiddenElement.href = 'data:attachment/text,' + encodeURI(data);
+  // hiddenElement.target = '_blank';
+  // hiddenElement.download = 'data.csv';
+  // hiddenElement.click();
 });
-
-// Listen to confrim output message
-socket.off('confirmOutput').on('confirmOutput', () => {
-  while (true) {
-    out = prompt(`Please state your output varible from your uploaded file:
-    \n-${var_names.toString().replaceAll(',','\n-')}`, var_names[var_names.length-1]);
-    // check if the value exists
-    if (Boolean(var_names.indexOf(out) !== -1)) {
-      console.log(`The user choose output as: ${out}`);
-      socket.emit('output', out);
-      break;
-    };
-  }  
-});
-
-// Listen to training start message
-socket.off('startTraining').on('startTraining', () => {
-  async function Train(){
-    let pyodide = await initPyodide;
-    // await pyodide.loadPackage(["pandas"]);
-    // Load and pass variable to python
-    pyodide.runPython(`
-    data = ${r_data}
-    out = ${JSON.stringify(out)}
-    `);
-    // Run initialization python script
-    pyodide.runPython(
-      await (await fetch("py/LR.py")).text()
-    );
-    gram = pyodide.globals.get('gram');
-    xy = pyodide.globals.get('xy');
-    socket.emit('LRmodelUpdate', { gram, xy });
-  }
-  Train();
-})
-
 
   // Scroll down
   chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -294,4 +212,3 @@ document.getElementById('leave-btn').addEventListener('click', () => {
   } else {
   }
 });
-
